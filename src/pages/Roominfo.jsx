@@ -99,6 +99,19 @@ function Roominfo() {
     setError("")
     setIsBooking(true)
 
+    if (user) {
+      const fullName = user.user_metadata?.full_name || user.email?.split('@')[0] || ''
+      try {
+        await supabase.from('profiles').upsert({
+          id: user.id,
+          full_name: fullName,
+          email: user.email,
+        }, { onConflict: 'id' })
+      } catch (err) {
+        console.warn('Could not sync profile before booking:', err)
+      }
+    }
+
     const { error: bookingError } = await supabase.from('bookings').insert({
       user_id: user.id,
       room_id: room.id,
