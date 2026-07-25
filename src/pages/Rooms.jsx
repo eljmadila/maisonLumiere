@@ -44,7 +44,11 @@ function Rooms() {
         <p>Filter by your dates, party size, and budget.</p>
       </div>
 
-      <Form onSearch={handleSearch} />
+      <Form 
+        onSearch={handleSearch} 
+        initialCheckIn={searchParams.get('checkIn') || ""} 
+        initialCheckOut={searchParams.get('checkOut') || ""} 
+      />
 
       {loading ? (
         <p>Loading rooms...</p>

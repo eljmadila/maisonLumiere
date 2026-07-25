@@ -1,10 +1,21 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useAuth } from '../context/AuthContext'
 import Signup from '../components/Signup'
 import Login from '../components/Login'
 import "../App.css"
 
 function Auth() {
-  const [mode, setMode] = useState('login') 
+  const [mode, setMode] = useState('login')
+  const { isLoggedIn } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+
+  useEffect(() => {
+    if (isLoggedIn) {
+      navigate(location.state?.from?.pathname || '/', { replace: true })
+    }
+  }, [isLoggedIn, navigate, location])
 
   return (
     <div className='auth'>

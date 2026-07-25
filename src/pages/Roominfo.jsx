@@ -1,18 +1,29 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate, useLocation, Link } from 'react-router-dom'
+import { useParams, useNavigate, useLocation, Link, useSearchParams } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
+import { getTodayString, getNextDayString, calculateNights } from '../utils/dateUtils'
 import "../App.css"
 
 function Roominfo() {
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
   const { isLoggedIn, user } = useAuth()
   const navigate = useNavigate()
   const location = useLocation()
 
   const [room, setRoom] = useState(null)
   const [loadingRoom, setLoadingRoom] = useState(true)
-  const [nights, setNights] = useState(1)
+
+  const urlCheckIn = searchParams.get('checkIn')
+  const urlCheckOut = searchParams.get('checkOut')
+
+  const todayStr = getTodayString()
+  const initialIn = urlCheckIn || todayStr
+  const initialOut = urlCheckOut || getNextDayString(initialIn)
+
+  const [checkIn, setCheckIn] = useState(initialIn)
+  const [checkOut, setCheckOut] = useState(initialOut)
   const [error, setError] = useState("")
   const [isBooking, setIsBooking] = useState(false)
 
@@ -52,20 +63,24 @@ function Roominfo() {
 
   const { image_url, number, type, description, price, capacity, amenities } = room
 
-  const handleNightsChange = (e) => {
-    const value = e.target.value
-    if (value === "") { setNights(""); setError(""); return }
-    const parsed = parseInt(value, 10)
-    if (isNaN(parsed) || parsed < 1) {
-      setError("Enter at least 1 night.")
-      setNights(value)
-      return
+  const handleCheckInChange = (e) => {
+    const val = e.target.value
+    setCheckIn(val)
+    if (!val) return
+    const minOut = getNextDayString(val)
+    if (!checkOut || checkOut <= val) {
+      setCheckOut(minOut)
     }
-    setError("")
-    setNights(parsed)
   }
 
-  const validNights = typeof nights === "number" && nights > 0
+  const handleCheckOutChange = (e) => {
+    setCheckOut(e.target.value)
+  }
+
+  const minCheckOut = checkIn ? getNextDayString(checkIn) : getNextDayString()
+  const nights = calculateNights(checkIn, checkOut)
+  const validNights = nights > 0
+
   const total = validNights ? (nights * price).toFixed(2) : "0.00"
 
   const handleBooking = async (e) => {
@@ -77,7 +92,7 @@ function Roominfo() {
     }
 
     if (!validNights) {
-      setError("Enter a valid number of nights before booking.")
+      setError("Please select valid check-in and check-out dates (at least 1 night).")
       return
     }
 
@@ -137,21 +152,41 @@ function Roominfo() {
           )}
 
           <form className="booking-form" onSubmit={handleBooking} noValidate>
-            <div className="booking-form-row">
-              <label htmlFor="nights">Number of nights</label>
-              <input
-                id="nights"
-                type="number"
-                min="1"
-                value={nights}
-                onChange={handleNightsChange}
-                required
-              />
+            <div className="booking-dates-grid">
+              <div className="booking-form-row">
+                <label htmlFor="check-in">Check in</label>
+                <input
+                  id="check-in"
+                  type="date"
+                  min={todayStr}
+                  value={checkIn}
+                  onChange={handleCheckInChange}
+                  required
+                />
+              </div>
+
+              <div className="booking-form-row">
+                <label htmlFor="check-out">Check out</label>
+                <input
+                  id="check-out"
+                  type="date"
+                  min={minCheckOut}
+                  value={checkOut}
+                  onChange={handleCheckOutChange}
+                  required
+                />
+              </div>
             </div>
 
             {error && <p className="auth-error" role="alert">{error}</p>}
 
             <div className="booking-summary">
+              <div className="booking-summary-line">
+                <span>Stay duration</span>
+                <span className="nights-badge">
+                  <i className="fa-regular fa-moon"></i> {nights} {nights === 1 ? "night" : "nights"}
+                </span>
+              </div>
               <div className="booking-summary-line">
                 <span>${price} × {validNights ? nights : 0} night{nights === 1 ? "" : "s"}</span>
                 <span>${total}</span>

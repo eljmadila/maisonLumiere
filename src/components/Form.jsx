@@ -1,27 +1,55 @@
 import React, { useState } from 'react'
 import "../App.css"
+import { getTodayString, getNextDayString, calculateNights } from '../utils/dateUtils'
 
-function Form({ onSearch }) {
-  const [checkIn, setCheckIn] = useState("")
-  const [checkOut, setCheckOut] = useState("")
+function Form({ onSearch, initialCheckIn = "", initialCheckOut = "" }) {
+  const [checkIn, setCheckIn] = useState(initialCheckIn)
+  const [checkOut, setCheckOut] = useState(initialCheckOut)
   const [guests, setGuests] = useState("")
   const [type, setType] = useState("")
   const [maxPrice, setMaxPrice] = useState("")
+
+  const handleCheckInChange = (e) => {
+    const val = e.target.value
+    setCheckIn(val)
+    if (!val) return
+    const minOut = getNextDayString(val)
+    if (!checkOut || checkOut <= val) {
+      setCheckOut(minOut)
+    }
+  }
+
+  const handleCheckOutChange = (e) => {
+    setCheckOut(e.target.value)
+  }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     onSearch({ checkIn, checkOut, guests, type, maxPrice })
   }
 
+  const todayStr = getTodayString()
+  const minCheckOut = checkIn ? getNextDayString(checkIn) : getNextDayString()
+  const nights = calculateNights(checkIn, checkOut)
+
   return (
     <div>
+      <div className='form-header-bar'>
+        {nights > 0 && (
+          <span className='nights-badge'>
+            <i className="fa-regular fa-moon"></i> {nights} {nights === 1 ? 'night' : 'nights'} stay
+          </span>
+        )}
+      </div>
       <form className='form-rooms' onSubmit={handleSubmit}>
         <div>
           <label>Check in</label>
           <input
             type="date"
+            min={todayStr}
             value={checkIn}
-            onChange={(e) => setCheckIn(e.target.value)}
+            onChange={handleCheckInChange}
+            required
           />
         </div>
         <div>
@@ -29,16 +57,21 @@ function Form({ onSearch }) {
           <input
             type="date"
             value={checkOut}
-            onChange={(e) => setCheckOut(e.target.value)}
+            min={minCheckOut}
+            onChange={handleCheckOutChange}
+            required
           />
         </div>
         <div>
-          <label>Guests</label>
+          <label>Guests (max:5)</label>
           <input
             type="number"
             placeholder='Number of guests...'
+            min={1}
+            max={5}
             value={guests}
             onChange={(e) => setGuests(e.target.value)}
+            required
           />
         </div>
         <div>
@@ -59,12 +92,15 @@ function Form({ onSearch }) {
           </div>
         </div>
         <div>
-          <label>Max price</label>
+          <label>Max price (100$-2000$)</label>
           <input
             type="number"
             placeholder='Enter your budget...'
             value={maxPrice}
+            min={100}
+            max={2000}
             onChange={(e) => setMaxPrice(e.target.value)}
+            required
           />
         </div>
 

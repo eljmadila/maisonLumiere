@@ -1,8 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom'; 
+import { Link, useLocation } from 'react-router-dom'; 
 import "../App.css"
 
 function Roomscard({ id, image, number, type, description, price }) {
+  const location = useLocation();
+
   return (
     <div className="room-card">
       <img src={image} alt={`${type} Room ${number}`} />
@@ -15,7 +17,7 @@ function Roomscard({ id, image, number, type, description, price }) {
 
         <div className="room-card-footer">
           <p className="room-price">${price} <span>/ night</span></p>
-          <Link to={`/roominfo/${id}`} className="view-link">
+          <Link to={`/roominfo/${id}${location.search}`} className="view-link">
             <span>VIEW</span> <span><i className="fa-solid fa-arrow-right-long"></i></span>
           </Link>
         </div>

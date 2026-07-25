@@ -1227,3 +1227,46 @@ footer p {
     display: none;
   }
 }
+
+/* ===========================================================
+   NIGHTS INDICATOR & DATES GRID
+   =========================================================== */
+.hero-form-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.form-header-bar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: var(--space-3);
+}
+
+.nights-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(176, 141, 70, 0.15);
+  color: var(--accent);
+  border: 1px solid rgba(176, 141, 70, 0.3);
+  padding: 4px 10px;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.booking-dates-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: var(--space-4);
+}
+
+@media (max-width: 500px) {
+  .booking-dates-grid {
+    grid-template-columns: 1fr;
+  }
+}

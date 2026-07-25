@@ -84,6 +84,7 @@ function Signup({ onSwitchToLogin }) {
             placeholder='Create a password...'
             autoComplete="new-password"
             minLength={6}
+            maxLength={32}
             onChange={(e) => setPassword(e.target.value)}
             required
           />

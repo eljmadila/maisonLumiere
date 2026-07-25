@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import "../App.css"
 import { Link, useNavigate } from "react-router-dom"
+import { getTodayString, getNextDayString, calculateNights } from '../utils/dateUtils'
 
 function Hero() {
   const navigate = useNavigate()
@@ -8,6 +9,20 @@ function Hero() {
   const [checkOut, setCheckOut] = useState("")
   const [guests, setGuests] = useState("")
   const [type, setType] = useState("")
+
+  const handleCheckInChange = (e) => {
+    const val = e.target.value
+    setCheckIn(val)
+    if (!val) return
+    const minOut = getNextDayString(val)
+    if (!checkOut || checkOut <= val) {
+      setCheckOut(minOut)
+    }
+  }
+
+  const handleCheckOutChange = (e) => {
+    setCheckOut(e.target.value)
+  }
 
   const handleSearch = (e) => {
     e.preventDefault()
@@ -18,6 +33,10 @@ function Hero() {
     if (type) params.set('type', type)
     navigate(`/rooms?${params.toString()}`)
   }
+
+  const todayStr = getTodayString()
+  const minCheckOut = checkIn ? getNextDayString(checkIn) : getNextDayString()
+  const nights = calculateNights(checkIn, checkOut)
 
   return (
     <div className='hero'>
@@ -37,20 +56,46 @@ function Hero() {
       </div>
 
       <div className='hero-form'>
-        <h2>Find your room</h2>
+        <div className='hero-form-header'>
+          <h2>Find your room</h2>
+          {nights > 0 && (
+            <span className='nights-badge'>
+              <i className="fa-regular fa-moon"></i> {nights} {nights === 1 ? 'night' : 'nights'}
+            </span>
+          )}
+        </div>
         <form className='form-elements' onSubmit={handleSearch}>
           <div className='elements'>
             <div>
               <label>Check in</label>
-              <input type="date" value={checkIn} onChange={(e) => setCheckIn(e.target.value)} />
+              <input 
+                type="date" 
+                value={checkIn} 
+                onChange={handleCheckInChange} 
+                min={todayStr} 
+                required
+              />
             </div>
             <div>
               <label>Check out</label>
-              <input type="date" value={checkOut} onChange={(e) => setCheckOut(e.target.value)} />
+              <input 
+                type="date" 
+                value={checkOut} 
+                onChange={handleCheckOutChange} 
+                min={minCheckOut} 
+                required
+              />
             </div>
             <div>
-              <label>Guests</label>
-              <input type="number" placeholder='Number of guests...' value={guests} onChange={(e) => setGuests(e.target.value)} />
+              <label>Guests (max:5)</label>
+              <input 
+                type="number" 
+                placeholder='Number of guests...' 
+                min={1} max={5} 
+                value={guests} 
+                onChange={(e) => setGuests(e.target.value)} 
+                required
+              />
             </div>
             <div className="form-group">
               <label htmlFor="room-type">Room type</label>
