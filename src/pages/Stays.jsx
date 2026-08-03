@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { Link, Navigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
+import InvoiceModal from '../components/InvoiceModal'
 import "../App.css"
 
 function Stays() {
@@ -10,6 +11,7 @@ function Stays() {
   const [loading, setLoading] = useState(true)
   const [cancellingId, setCancellingId] = useState(null)
   const [checkingOutId, setCheckingOutId] = useState(null)
+  const [selectedInvoiceBooking, setSelectedInvoiceBooking] = useState(null)
 
   useEffect(() => {
     if (!user) return
@@ -18,7 +20,7 @@ function Stays() {
       .from('bookings')
       .select('*, rooms(*)')
       .eq('user_id', user.id)
-      .neq('status', 'cancelled') // les annulées ne remontent plus jamais, même après refresh
+      .neq('status', 'cancelled')
       .then(({ data }) => {
         setBookings(data ?? [])
         setLoading(false)
@@ -65,7 +67,6 @@ function Stays() {
       return
     }
 
-    // retiré définitivement — la requête au chargement l'exclut désormais aussi
     setBookings((prev) => prev.filter((b) => b.id !== booking.id))
   }
 
@@ -95,47 +96,64 @@ function Stays() {
             const isPaid = booking.status === 'checked-out'
             return (
               <div className="room-card" key={booking.id}>
-                <img src={booking.rooms.image_url} alt={`${booking.rooms.type} Room ${booking.rooms.number}`} />
+                <img src={booking.rooms?.image_url} alt={`${booking.rooms?.type} Room ${booking.rooms?.number}`} />
                 <div className="room-card-content">
                   <div className="room-card-header">
-                    <h2>{booking.rooms.type} · Room {booking.rooms.number}</h2>
+                    <h2>{booking.rooms?.type} · Room {booking.rooms?.number}</h2>
                     <p className="room-type">{booking.nights} night{booking.nights > 1 ? "s" : ""}</p>
                   </div>
                   <p className="room-description">
-                    ${booking.rooms.price} / night &times; {booking.nights} night{booking.nights > 1 ? "s" : ""}
+                    ${booking.rooms?.price} / night &times; {booking.nights} night{booking.nights > 1 ? "s" : ""}
                   </p>
                   <div className="room-card-footer">
                     {isPaid ? (
                       <p className="room-price paid-badge">
-                        Paid <span>${booking.total.toFixed(2)}</span>
+                        Checked Out <span>${booking.total ? booking.total.toFixed(2) : '0.00'}</span>
                       </p>
                     ) : (
-                      <p className="room-price">${booking.total.toFixed(2)} <span>total</span></p>
+                      <p className="room-price">${booking.total ? booking.total.toFixed(2) : '0.00'} <span>total</span></p>
                     )}
                   </div>
-                  <div className="stay-actions">
+                  <div className="stay-actions" style={{ display: 'flex', gap: '0.5rem', flexWrap: 'wrap' }}>
                     <button
                       type="button"
                       className="a-btn"
                       onClick={() => handleCheckout(booking)}
                       disabled={isPaid || checkingOutId === booking.id}
+                      style={{ flex: 1 }}
                     >
-                      {isPaid ? "Paid" : checkingOutId === booking.id ? "Processing..." : "Check out"}
+                      {isPaid ? "Checked Out" : checkingOutId === booking.id ? "Processing..." : "Check out"}
                     </button>
                     <button
                       type="button"
-                      className="cancel-btn"
-                      onClick={() => handleCancel(booking)}
-                      disabled={cancellingId === booking.id}
+                      style={{ background: '#333', color: '#c5a059', border: '1px solid #c5a059', padding: '0.6rem', borderRadius: '4px', cursor: 'pointer', flex: 1 }}
+                      onClick={() => setSelectedInvoiceBooking(booking)}
                     >
-                      {cancellingId === booking.id ? "Cancelling..." : "Cancel"}
+                      <i className="fa-solid fa-file-invoice"></i> Invoice
                     </button>
+                    {!isPaid && (
+                      <button
+                        type="button"
+                        className="cancel-btn"
+                        onClick={() => handleCancel(booking)}
+                        disabled={cancellingId === booking.id}
+                      >
+                        {cancellingId === booking.id ? "..." : "Cancel"}
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
             )
           })}
         </div>
+      )}
+
+      {selectedInvoiceBooking && (
+        <InvoiceModal
+          booking={selectedInvoiceBooking}
+          onClose={() => setSelectedInvoiceBooking(null)}
+        />
       )}
     </div>
   )

@@ -3,6 +3,7 @@ import { useParams, useNavigate, useLocation, Link, useSearchParams } from 'reac
 import { useAuth } from '../context/AuthContext'
 import { supabase } from '../supabaseClient'
 import { getTodayString, getNextDayString, calculateNights } from '../utils/dateUtils'
+import PaymentModal from '../components/PaymentModal'
 import "../App.css"
 
 function Roominfo() {
@@ -26,6 +27,7 @@ function Roominfo() {
   const [checkOut, setCheckOut] = useState(initialOut)
   const [error, setError] = useState("")
   const [isBooking, setIsBooking] = useState(false)
+  const [showPayment, setShowPayment] = useState(false)
 
   useEffect(() => {
     supabase
@@ -83,7 +85,7 @@ function Roominfo() {
 
   const total = validNights ? (nights * price).toFixed(2) : "0.00"
 
-  const handleBooking = async (e) => {
+  const handleBookingClick = (e) => {
     e.preventDefault()
 
     if (!isLoggedIn) {
@@ -97,6 +99,11 @@ function Roominfo() {
     }
 
     setError("")
+    setShowPayment(true)
+  }
+
+  const handlePaymentSuccess = async (paymentDetails) => {
+    setShowPayment(false)
     setIsBooking(true)
 
     if (user) {
@@ -115,8 +122,11 @@ function Roominfo() {
     const { error: bookingError } = await supabase.from('bookings').insert({
       user_id: user.id,
       room_id: room.id,
+      check_in: checkIn,
+      check_out: checkOut,
       nights,
       total: parseFloat(total),
+      status: 'booked',
     })
 
     setIsBooking(false)
@@ -164,7 +174,7 @@ function Roominfo() {
             </p>
           )}
 
-          <form className="booking-form" onSubmit={handleBooking} noValidate>
+          <form className="booking-form" onSubmit={handleBookingClick} noValidate>
             <div className="booking-dates-grid">
               <div className="booking-form-row">
                 <label htmlFor="check-in">Check in</label>
@@ -217,10 +227,22 @@ function Roominfo() {
                 className="a-btn"
                 disabled={isBooking || (isLoggedIn && !validNights)}
               >
-                {!isLoggedIn ? "Sign in to book" : isBooking ? "Booking..." : "Book this room"}
+                {!isLoggedIn ? "Sign in to book" : isBooking ? "Processing..." : "Proceed to Payment"}
               </button>
             </div>
           </form>
+
+          {showPayment && (
+            <PaymentModal
+              room={room}
+              checkIn={checkIn}
+              checkOut={checkOut}
+              nights={nights}
+              total={total}
+              onPaymentSuccess={handlePaymentSuccess}
+              onClose={() => setShowPayment(false)}
+            />
+          )}
         </div>
       </div>
     </div>

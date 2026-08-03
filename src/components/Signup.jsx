@@ -6,6 +6,7 @@ function Signup({ onSwitchToLogin }) {
   const [fullname, setFullname] = useState("")
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
+  const [role, setRole] = useState("guest")
   const [error, setError] = useState("")
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
@@ -25,7 +26,7 @@ function Signup({ onSwitchToLogin }) {
     }
 
     setIsSubmitting(true)
-    const { error: signupError } = await signup(email, password, fullname)
+    const { error: signupError } = await signup(email, password, fullname, role)
     setIsSubmitting(false)
 
     if (signupError) {
@@ -72,6 +73,21 @@ function Signup({ onSwitchToLogin }) {
           onChange={(e) => setEmail(e.target.value)}
           required
         />
+      </div>
+
+      <div>
+        <label htmlFor="signup-role">Account Type / Role</label>
+        <select
+          id="signup-role"
+          value={role}
+          onChange={(e) => setRole(e.target.value)}
+          className="search-input"
+          style={{ width: '100%', padding: '0.8rem', borderRadius: '8px', background: '#1c1b18', color: '#fff', border: '1px solid #444' }}
+        >
+          <option value="guest">Guest / Customer</option>
+          <option value="receptionist">Receptionist / Front Desk</option>
+          <option value="manager">Hotel Manager</option>
+        </select>
       </div>
 
       <div>

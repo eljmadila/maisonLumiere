@@ -6,15 +6,29 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [customRole, setCustomRole] = useState(localStorage.getItem('maison_active_role') || null)
+
+  const activeRole = customRole || user?.user_metadata?.role || 'guest'
+
+  const updateActiveRole = (newRole) => {
+    setCustomRole(newRole)
+    if (newRole) {
+      localStorage.setItem('maison_active_role', newRole)
+    } else {
+      localStorage.removeItem('maison_active_role')
+    }
+  }
 
   const ensureProfile = async (u) => {
     if (!u) return
     const fullName = u.user_metadata?.full_name || u.email?.split('@')[0] || ''
+    const role = u.user_metadata?.role || 'guest'
     try {
       await supabase.from('profiles').upsert({
         id: u.id,
         full_name: fullName,
         email: u.email,
+        role: role,
       }, { onConflict: 'id' })
     } catch (err) {
       console.warn('Could not sync profile to Supabase:', err)
@@ -42,20 +56,35 @@ export function AuthProvider({ children }) {
 
   const login = (email, password) => supabase.auth.signInWithPassword({ email, password })
 
-  const signup = (email, password, fullName) =>
+  const signup = (email, password, fullName, role = 'guest') =>
     supabase.auth.signUp({
       email,
       password,
       options: {
-        data: { full_name: fullName },
+        data: { full_name: fullName, role: role },
         emailRedirectTo: `${window.location.origin}/confirmed`,
       },
     })
 
-  const logout = () => supabase.auth.signOut()
+  const logout = () => {
+    localStorage.removeItem('maison_active_role')
+    setCustomRole(null)
+    return supabase.auth.signOut()
+  }
 
   return (
-    <AuthContext.Provider value={{ user, isLoggedIn: !!user, loading, login, signup, logout }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        isLoggedIn: !!user,
+        role: activeRole,
+        setRole: updateActiveRole,
+        loading,
+        login,
+        signup,
+        logout,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   )

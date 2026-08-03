@@ -1,97 +1,135 @@
-# Maison Lumière
+# 🏨 Maison Lumière — Hotel Management & Booking Platform
 
-A minimal React + Vite starter project.
+**Maison Lumière** (*EST. 2026*) is a modern, elegant web application for luxury hotel browsing, room reservations, and stay management. Designed with a sleek aesthetic and powered by React 19, Vite, React Router 7, and Supabase.
 
-This repository contains a lightweight Vite + React application scaffolded from the official Vite React template. It includes fast HMR in development and is ready to be extended into a production app.
+---
 
-## Features
+## 🌟 Key Features
 
-- React with Vite for fast development and builds
-- Hot Module Replacement (HMR)
-- Optional React compiler and alternative React SWC plugin support (see docs)
-- Basic linting recommendations (Oxc / Oxlint)
+- 🛋️ **Room Catalog & Exploration**: Browse curated luxury suites, view pricing, amenities, and room availability.
+- 📅 **Interactive Room Reservation**: Real-time room booking with instant date validation and total cost calculation.
+- 🔐 **User Authentication**: Secure user login and registration powered by Supabase Auth with state persistence (`AuthContext`).
+- 🧳 **My Stays Dashboard**: Track, review, and manage active reservations and booking history.
+- 📱 **Fully Responsive UI**: Mobile-first responsive drawer sidebar, overlay navigation, and smooth transitions.
+- ⚡ **High Performance & Fast HMR**: Built with Vite 8 and React 19 for instantaneous page loads and lightning-fast developer feedback.
 
-## Requirements
+---
 
-- Node.js 18 or newer (LTS recommended)
-- npm, Yarn, or pnpm
+## 🛠️ Tech Stack
 
-## Quick start
+### Frontend & Architecture
+- **Framework**: [React 19](https://react.dev/)
+- **Build Tool / Bundler**: [Vite 8](https://vite.dev/)
+- **Routing**: [React Router v7](https://reactrouter.com/)
+- **Styling**: Vanilla CSS (Custom tokens, flexbox/grid, glassmorphism, responsive navigation overlay)
 
-1. Install dependencies
+### Backend & Services
+- **Database & Authentication**: [Supabase JS Client (`@supabase/supabase-js`)](https://supabase.com/)
 
+### Tooling & Deployment
+- **Linter**: [Oxlint](https://oxc.rs/)
+- **Hosting / Deployment**: [GitHub Pages (`gh-pages`)](https://eljmadila.github.io/maisonLumiere)
+
+---
+
+## 📂 Project Structure
+
+```text
+hotelmanagement/
+├── public/                 # Static public assets
+├── src/
+│   ├── components/         # Reusable UI components
+│   │   ├── About.jsx       # About hotel section
+│   │   ├── Aboutcard.jsx   # Feature highlights cards
+│   │   ├── Form.jsx        # Booking / Reservation form
+│   │   ├── Hero.jsx        # Homepage hero section
+│   │   ├── Login.jsx       # Login form component
+│   │   ├── Roomscard.jsx   # Room preview card
+│   │   └── Signup.jsx      # Signup form component
+│   ├── context/
+│   │   └── AuthContext.jsx # Global authentication context & state
+│   ├── pages/              # Application views / routes
+│   │   ├── Auth.jsx        # Login/Signup authentication page
+│   │   ├── Confirmed.jsx   # Booking confirmation view
+│   │   ├── Home.jsx        # Landing page
+│   │   ├── Roominfo.jsx    # Room details & booking page
+│   │   ├── Rooms.jsx       # Full room catalog
+│   │   └── Stays.jsx       # User reservations & stays page
+│   ├── utils/
+│   │   └── dateUtils.js    # Date formatting & booking calculations helper
+│   ├── App.jsx             # Main layout, router setup & responsive navigation
+│   ├── App.css             # Main stylesheet & design system
+│   ├── main.jsx            # Application entry point
+│   └── supabaseClient.js   # Supabase client configuration
+├── .env                    # Environment variables (Supabase keys)
+├── package.json            # Project dependencies & scripts
+└── vite.config.js          # Vite configuration
+```
+
+---
+
+## 🚀 Getting Started
+
+### Prerequisites
+
+Ensure you have the following installed on your system:
+- **Node.js** (v18.0.0 or higher recommended)
+- **npm** (v9.0.0 or higher)
+
+### Installation
+
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/eljmadila/maisonLumiere.git
+   cd maisonLumiere/hotelmanagement
+   ```
+
+2. **Install dependencies**:
+   ```bash
+   npm install
+   ```
+
+3. **Configure Environment Variables**:
+   Create a `.env` file in the root directory of `hotelmanagement` with your Supabase credentials:
+   ```env
+   VITE_SUPABASE_URL=https://your-supabase-project.supabase.co
+   VITE_SUPABASE_ANON_KEY=your-supabase-anon-key
+   ```
+
+4. **Start the local development server**:
+   ```bash
+   npm run dev
+   ```
+   Open your browser and navigate to `http://localhost:5173`.
+
+---
+
+## 📜 Available Scripts
+
+In the project directory, you can run:
+
+| Command | Action |
+| :--- | :--- |
+| `npm run dev` | Runs the app in development mode with HMR. |
+| `npm run build` | Builds the app for production to the `dist` folder. |
+| `npm run preview` | Locally previews the production build. |
+| `npm run lint` | Runs [Oxlint](https://oxc.rs/) to inspect code quality. |
+| `npm run deploy` | Builds the app and deploys it to GitHub Pages. |
+
+---
+
+## 🌐 Live Demo & Deployment
+
+The application is deployed on GitHub Pages and can be accessed at:
+👉 **[Maison Lumière Live Demo](https://eljmadila.github.io/maisonLumiere)**
+
+To deploy your own updates:
 ```bash
-npm install
-# or
-# yarn
-# or
-# pnpm install
+npm run deploy
 ```
 
-2. Run the dev server
+---
 
-```bash
-npm run dev
-```
+## 📄 License
 
-Open http://localhost:5173 in your browser. The port may vary — check the terminal output.
-
-3. Build for production
-
-```bash
-npm run build
-```
-
-4. Preview the production build locally
-
-```bash
-npm run preview
-```
-
-## Scripts (typical)
-
-The template usually includes these npm scripts in package.json. If a script is missing you can add it or run the equivalent Vite command directly.
-
-- `dev` — start the development server
-- `build` — produce a production build
-- `preview` — locally preview the production build
-- `lint` — run linting (if configured)
-- `format` — run code formatter (if configured)
-- `test` — run tests (if configured)
-
-## Linting and Compiler Notes
-
-This template mentions Oxlint and two official plugins:
-
-- `@vitejs/plugin-react` (uses Oxc)
-- `@vitejs/plugin-react-swc` (uses SWC)
-
-The React Compiler is intentionally not enabled by default in the template due to performance trade-offs. To enable or experiment with it, see the React Compiler documentation: https://react.dev/learn/react-compiler/installation
-
-If you plan to develop a production application, consider using TypeScript with type-aware lint rules enabled.
-
-## Environment
-
-If your app needs environment variables, create a `.env` or `.env.local` file at the repository root. Vite exposes variables prefixed with `VITE_` to the client code.
-
-Example:
-
-```
-VITE_API_URL=https://api.example.com
-```
-
-## Deployment
-
-This project can be deployed to static hosts that support single-page apps, such as Vercel, Netlify, or any static file hosting. The build output is located in the `dist/` directory after `npm run build`.
-
-## Contributing
-
-Contributions are welcome — feel free to open issues or pull requests. Please include a clear description of your change and any relevant steps to reproduce or test.
-
-## License
-
-Add a LICENSE file to indicate the project license. If you don't have one yet, the repository currently has no license declared.
-
-## Questions / Contact
-
-If you want changes to this README (project description, commands, badges, or a translated version), tell me what to include and I will update it.
+This project is created for personal and portfolio use. All rights reserved by **Maison Lumière**.
