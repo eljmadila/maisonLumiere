@@ -8,15 +8,21 @@ import Stays from './pages/Stays'
 import Receptionist from './pages/Receptionist'
 import Manager from './pages/Manager'
 import Confirmed from './pages/Confirmed'
-import { Routes, Route, Link, useLocation } from 'react-router-dom'
+import ProtectedRoute from './components/ProtectedRoute'
+import { Routes, Route, Link } from 'react-router-dom'
 import { useAuth } from './context/AuthContext'
 
 function App() {
-  const { isLoggedIn, logout, role, setRole } = useAuth()
+  const { isLoggedIn, logout, role, user } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
-  const location = useLocation()
 
   const closeMenu = () => setMenuOpen(false)
+
+  const getRoleLabel = (r) => {
+    if (r === 'manager') return 'Hotel Manager'
+    if (r === 'receptionist') return 'Receptionist'
+    return 'Guest'
+  }
 
   const NotFound = () => {
     return (
@@ -57,28 +63,21 @@ function App() {
             <li><Link to="/">Home</Link></li>
             <li><Link to="/rooms">Rooms</Link></li>
             {isLoggedIn && <li><Link to="/stays">Stays</Link></li>}
-            {(role === 'receptionist' || role === 'manager') && (
+            {isLoggedIn && (role === 'receptionist' || role === 'manager') && (
               <li><Link to="/receptionist" style={{ color: '#c5a059' }}><i className="fa-solid fa-bell-concierge"></i> Reception</Link></li>
             )}
-            {role === 'manager' && (
+            {isLoggedIn && role === 'manager' && (
               <li><Link to="/manager" style={{ color: '#c5a059' }}><i className="fa-solid fa-chart-line"></i> Management</Link></li>
             )}
           </ul>
 
           <div className="nav-right" style={{ display: 'flex', alignItems: 'center', gap: '0.8rem' }}>
-            {/* Quick Role Switcher for Testing/Demo */}
-            <div className="role-switcher nav-desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#25231f', padding: '0.3rem 0.6rem', borderRadius: '20px', border: '1px solid #444' }}>
-              <span style={{ fontSize: '0.75rem', color: '#aaa' }}>Role:</span>
-              <select
-                value={role}
-                onChange={(e) => setRole(e.target.value)}
-                style={{ background: 'none', border: 'none', color: '#c5a059', fontWeight: 'bold', fontSize: '0.85rem', cursor: 'pointer', outline: 'none' }}
-              >
-                <option value="guest" style={{ background: '#1c1b18', color: '#fff' }}>Guest</option>
-                <option value="receptionist" style={{ background: '#1c1b18', color: '#fff' }}>Receptionist</option>
-                <option value="manager" style={{ background: '#1c1b18', color: '#fff' }}>Hotel Manager</option>
-              </select>
-            </div>
+            {isLoggedIn && (
+              <div className="role-badge nav-desktop-only" style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: '#25231f', padding: '0.35rem 0.8rem', borderRadius: '20px', border: '1px solid #444', fontSize: '0.82rem', color: '#c5a059' }}>
+                <i className="fa-solid fa-user-shield" style={{ fontSize: '0.8rem' }}></i>
+                <span style={{ fontWeight: '600' }}>{getRoleLabel(role)}</span>
+              </div>
+            )}
 
             {isLoggedIn ? (
               <button className='signin nav-desktop-only' onClick={logout}>Log out</button>
@@ -117,28 +116,21 @@ function App() {
           </button>
         </div>
 
-        {/* Role switcher inside mobile drawer */}
-        <div style={{ padding: '0.8rem 1rem', background: '#25231f', margin: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #444', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '0.85rem', color: '#aaa' }}>Switch Demo Role:</span>
-          <select
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-            style={{ background: 'none', border: 'none', color: '#c5a059', fontWeight: 'bold', fontSize: '0.9rem', cursor: 'pointer', outline: 'none' }}
-          >
-            <option value="guest" style={{ background: '#1c1b18', color: '#fff' }}>Guest</option>
-            <option value="receptionist" style={{ background: '#1c1b18', color: '#fff' }}>Receptionist</option>
-            <option value="manager" style={{ background: '#1c1b18', color: '#fff' }}>Manager</option>
-          </select>
-        </div>
+        {isLoggedIn && (
+          <div style={{ padding: '0.6rem 1rem', background: '#25231f', margin: '0.5rem 1rem', borderRadius: '8px', border: '1px solid #444', display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', color: '#c5a059' }}>
+            <i className="fa-solid fa-user-shield"></i>
+            <span>Account Role: <strong>{getRoleLabel(role)}</strong></span>
+          </div>
+        )}
 
         <ul className="mobile-navlinks">
           <li><Link to="/" onClick={closeMenu}>Home</Link></li>
           <li><Link to="/rooms" onClick={closeMenu}>Rooms</Link></li>
           {isLoggedIn && <li><Link to="/stays" onClick={closeMenu}>Stays</Link></li>}
-          {(role === 'receptionist' || role === 'manager') && (
+          {isLoggedIn && (role === 'receptionist' || role === 'manager') && (
             <li><Link to="/receptionist" onClick={closeMenu} style={{ color: '#c5a059' }}>Reception Desk</Link></li>
           )}
-          {role === 'manager' && (
+          {isLoggedIn && role === 'manager' && (
             <li><Link to="/manager" onClick={closeMenu} style={{ color: '#c5a059' }}>Hotel Management</Link></li>
           )}
         </ul>
@@ -160,10 +152,25 @@ function App() {
           <Route path='/rooms' element={<Rooms/>}/>
           <Route path='/roominfo/:id' element={<Roominfo />}/>
           <Route path='/auth' element={<Auth />}/>
-          <Route path='/stays' element={<Stays />}/>
-          <Route path='/receptionist' element={<Receptionist />}/>
-          <Route path='/manager' element={<Manager />}/>
           <Route path='/confirmed' element={<Confirmed />}/>
+          
+          {/* Protected Routes */}
+          <Route path='/stays' element={
+            <ProtectedRoute>
+              <Stays />
+            </ProtectedRoute>
+          }/>
+          <Route path='/receptionist' element={
+            <ProtectedRoute allowedRoles={['receptionist', 'manager']}>
+              <Receptionist />
+            </ProtectedRoute>
+          }/>
+          <Route path='/manager' element={
+            <ProtectedRoute allowedRoles={['manager']}>
+              <Manager />
+            </ProtectedRoute>
+          }/>
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </main>
@@ -175,4 +182,4 @@ function App() {
   )
 }
 
-export default App
+export default App

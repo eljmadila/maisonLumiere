@@ -6,32 +6,42 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(null)
   const [loading, setLoading] = useState(true)
-  const [customRole, setCustomRole] = useState(localStorage.getItem('maison_active_role') || null)
+  const [profileRole, setProfileRole] = useState(null)
 
-  const activeRole = customRole || user?.user_metadata?.role || 'guest'
+  // Determine active role: profileRole > user_metadata.role > 'guest'
+  const activeRole = profileRole || user?.user_metadata?.role || 'guest'
 
-  const updateActiveRole = (newRole) => {
-    setCustomRole(newRole)
-    if (newRole) {
-      localStorage.setItem('maison_active_role', newRole)
-    } else {
-      localStorage.removeItem('maison_active_role')
+  const syncUserProfile = async (u) => {
+    if (!u) {
+      setProfileRole(null)
+      return
     }
-  }
-
-  const ensureProfile = async (u) => {
-    if (!u) return
+    const metaRole = u.user_metadata?.role || 'guest'
     const fullName = u.user_metadata?.full_name || u.email?.split('@')[0] || ''
-    const role = u.user_metadata?.role || 'guest'
+
     try {
-      await supabase.from('profiles').upsert({
-        id: u.id,
-        full_name: fullName,
-        email: u.email,
-        role: role,
-      }, { onConflict: 'id' })
+      // 1. Fetch profile from Supabase
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', u.id)
+        .maybeSingle()
+
+      if (profile?.role) {
+        setProfileRole(profile.role)
+      } else {
+        // 2. Upsert profile if missing
+        await supabase.from('profiles').upsert({
+          id: u.id,
+          full_name: fullName,
+          email: u.email,
+          role: metaRole,
+        }, { onConflict: 'id' })
+        setProfileRole(metaRole)
+      }
     } catch (err) {
       console.warn('Could not sync profile to Supabase:', err)
+      setProfileRole(metaRole)
     }
   }
 
@@ -40,15 +50,21 @@ export function AuthProvider({ children }) {
       const { data: { session } } = await supabase.auth.getSession()
       const current = session?.user ?? null
       setUser(current)
-      if (current) ensureProfile(current)
+      if (current) {
+        await syncUserProfile(current)
+      }
       setLoading(false)
     }
     getInitialSession()
 
-    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: listener } = supabase.auth.onAuthStateChange(async (_event, session) => {
       const current = session?.user ?? null
       setUser(current)
-      if (current) ensureProfile(current)
+      if (current) {
+        await syncUserProfile(current)
+      } else {
+        setProfileRole(null)
+      }
     })
 
     return () => listener.subscription.unsubscribe()
@@ -67,8 +83,7 @@ export function AuthProvider({ children }) {
     })
 
   const logout = () => {
-    localStorage.removeItem('maison_active_role')
-    setCustomRole(null)
+    setProfileRole(null)
     return supabase.auth.signOut()
   }
 
@@ -78,7 +93,6 @@ export function AuthProvider({ children }) {
         user,
         isLoggedIn: !!user,
         role: activeRole,
-        setRole: updateActiveRole,
         loading,
         login,
         signup,
@@ -94,4 +108,5 @@ export function useAuth() {
   const ctx = useContext(AuthContext)
   if (!ctx) throw new Error('useAuth must be used inside an AuthProvider')
   return ctx
-}
+}
+
